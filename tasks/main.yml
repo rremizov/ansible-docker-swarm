@@ -1,0 +1,28 @@
+---
+- name: Install dependencies
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - ca-certificates
+      - curl
+      - python-pip
+
+- name: Install dependencies
+  pip:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - docker
+
+- name: Initialize Docker Swarm
+  docker_swarm:
+    state: present
+    advertise_addr: "{{ docker_swarm_advertise_addr }}"
+
+- name: Create Docker Swarm Secrets
+  docker_secret:
+    name: "{{ item.name }}"
+    data: "{{ item.value }}"
+    state: "{{ item.state }}"
+  with_items: "{{ docker_swarm_secrets }}"
