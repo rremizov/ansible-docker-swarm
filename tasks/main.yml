@@ -1,24 +1,80 @@
 ---
-- name: Install dependencies
+- name: Install system packages
   apt:
     name: "{{ packages }}"
   vars:
     packages:
       - ca-certificates
       - curl
-      - python-pip
+      - python-docker
 
-- name: Install dependencies
-  pip:
-    name: "{{ packages }}"
-  vars:
-    packages:
-      - docker
-
-- name: Initialize Docker Swarm
+- name: Update swarm
   docker_swarm:
-    state: present
-    advertise_addr: "{{ docker_swarm_advertise_addr }}"
+    state: "{{ docker_swarm_state }}"
+    advertise_addr: "{{ docker_swarm_advertise_addr|default(omit) }}"
+  when: docker_swarm_state != 'join'
+  register: update_swarm
+
+- name: Declare Swarm join tokens fact
+  set_fact:
+    swarm_join_token_manager: "{{ update_swarm.swarm_facts.JoinTokens.Manager }}"
+    swarm_join_token_worker: "{{ update_swarm.swarm_facts.JoinTokens.Worker }}"
+    cacheable: no
+  when:
+    - "'skipped' not in update_swarm"
+    - docker_swarm_node_role == 'manager'
+
+- name: Join swarm
+  docker_swarm:
+    state: "{{ docker_swarm_state }}"
+    advertise_addr: "{{ docker_swarm_advertise_addr|default(omit) }}"
+    remote_addrs: "{{ docker_swarm_remote_addrs }}"
+    join_token: "{{ hostvars[docker_swarm_managers[0]].swarm_join_token_manager }}"
+  when:
+    - docker_swarm_state == 'join'
+    - docker_swarm_node_role == 'manager'
+
+- name: Join swarm
+  docker_swarm:
+    state: "{{ docker_swarm_state }}"
+    advertise_addr: "{{ docker_swarm_advertise_addr|default(omit) }}"
+    remote_addrs: "{{ docker_swarm_remote_addrs }}"
+    join_token: "{{ hostvars[docker_swarm_managers[0]].swarm_join_token_worker }}"
+  when:
+    - docker_swarm_state == 'join'
+    - docker_swarm_node_role == 'worker'
+
+- name: Set node role
+  docker_node:
+    hostname: "{{ ansible_hostname }}"
+    role: "{{ docker_swarm_node_role }}"
+  when: docker_swarm_node_role == 'manager'
+
+- name: Set node labels
+  docker_node:
+    hostname: "{{ ansible_hostname }}"
+    labels: "{{ docker_swarm_node_labels }}"
+    labels_state: replace
+  when:
+    - docker_swarm_node_role == 'manager'
+    - docker_swarm_node_labels is defined
+
+- name: Set node role
+  docker_node:
+    hostname: "{{ ansible_hostname }}"
+    role: "{{ docker_swarm_node_role }}"
+  delegate_to: "{{ docker_swarm_managers[0] }}"
+  when: docker_swarm_node_role == 'worker'
+
+- name: Set node labels
+  docker_node:
+    hostname: "{{ ansible_hostname }}"
+    labels: "{{ docker_swarm_node_labels }}"
+    labels_state: replace
+  delegate_to: "{{ docker_swarm_managers[0] }}"
+  when:
+    - docker_swarm_node_role == 'worker'
+    - docker_swarm_node_labels is defined
 
 - name: Create Docker Swarm Secrets
   docker_secret:
@@ -26,3 +82,4 @@
     data: "{{ item.value }}"
     state: "{{ item.state }}"
   with_items: "{{ docker_swarm_secrets }}"
+  when: docker_swarm_node_role == 'manager'
