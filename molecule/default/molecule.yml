@@ -1,0 +1,21 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: instance
+    image: geerlingguy/docker-debian10-ansible:latest
+    pre_build_image: true
+    privileged: true # To run systemd inside image
+    volumes: # To run systemd inside image
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    command: null # Use the default image's CMD.
+provisioner:
+  name: ansible
+verifier:
+  name: testinfra
+lint: |
+  set -e
+  yamllint .
+  ansible-lint

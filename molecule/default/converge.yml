@@ -1,0 +1,47 @@
+---
+- name: Converge
+  hosts: all
+
+  pre_tasks:
+    - name: Install dependencies
+      apt:
+        name: "{{ packages }}"
+      vars:
+        packages:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg2
+          - software-properties-common
+
+    - name: Add Docker's official GPG key
+      apt_key:
+        url: https://download.docker.com/linux/debian/gpg
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: >
+          deb [arch=amd64]
+          https://download.docker.com/linux/debian
+          {{ ansible_distribution_release }} stable
+        state: present
+
+    - name: Install Docker
+      apt:
+        name: docker-ce
+        state: present
+
+  tasks:
+    - name: "Include docker-swarm"
+      include_role:
+        name: "ansible-docker-swarm"
+
+  vars:
+    docker_swarm_state: present
+    docker_swarm_node_role: manager
+    docker_swarm_node_labels:
+      label0: value0
+      label1: value1
+    docker_swarm_secrets:
+      secret0: value0
+      secret1: value1
