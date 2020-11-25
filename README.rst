@@ -3,6 +3,8 @@
 Docker Swarm
 ============
 
+.. image:: https://travis-ci.com/rremizov/ansible-docker-swarm.svg?branch=master
+
 Create and manage Docker Swarm.
 
 Requirements
