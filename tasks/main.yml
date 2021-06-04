@@ -19,7 +19,7 @@
   set_fact:
     swarm_join_token_manager: "{{ update_swarm.swarm_facts.JoinTokens.Manager }}"
     swarm_join_token_worker: "{{ update_swarm.swarm_facts.JoinTokens.Worker }}"
-    cacheable: no
+    cacheable: false
   when:
     - "'skipped' not in update_swarm"
     - docker_swarm_node_role == 'manager'
