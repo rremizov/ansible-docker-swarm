@@ -1,2 +1,4 @@
 ---
-docker_swarm_secrets:
+docker_swarm_python_docker_package: python3-docker
+docker_swarm_secrets: []
+docker_swarm_node_labels:

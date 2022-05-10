@@ -2,11 +2,12 @@
 - name: Install system packages
   apt:
     name: "{{ packages }}"
+    update_cache: true
   vars:
     packages:
       - ca-certificates
       - curl
-      - python-docker
+      - "{{ docker_swarm_python_docker_package }}"
 
 - name: Update swarm
   docker_swarm:
