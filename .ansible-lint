@@ -1,3 +1,5 @@
 ---
 skip_list:
   - 'fqcn-builtins'
+  - 'no-free-form'
+  - 'fqcn[action]'
