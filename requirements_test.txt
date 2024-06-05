@@ -1,5 +1,5 @@
 ansible-lint==24.6.0
-ansible==9.6.0
+ansible==10.0.0
 black==24.4.2
 isort==5.13.2
 yamllint==1.35.1
