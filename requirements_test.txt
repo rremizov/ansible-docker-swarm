@@ -1,4 +1,4 @@
-ansible-lint==24.9.2
+ansible-lint==24.10.0
 ansible==10.6.0
 black==24.10.0
 isort==5.13.2
